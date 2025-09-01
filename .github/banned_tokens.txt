@@ -1,0 +1,5 @@
+﻿# One token per line (case-sensitive exact matches searched as fixed strings)
+EasyHub
+easyhub
+EASYHUB
+

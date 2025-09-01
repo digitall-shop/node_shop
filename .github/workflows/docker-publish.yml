@@ -9,7 +9,7 @@ on:
 env:
   IMAGE_NAME: nodeshop
   NODESHOP_API_BASE_URL: https://api.nodeshop.example # TODO: set real prod API base URL via environment/secret
-  BANNED_TOKENS: EasyHub easyhub EASYHUB
+  # BANNED_TOKENS env removed; we now use .github/banned_tokens.txt for scanning.
 
 jobs:
   build-and-push:
@@ -49,12 +49,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
-      - name: Detect banned legacy tokens
+      - name: Scan for banned legacy tokens
         run: |
           EXIT=0
-          for t in $BANNED_TOKENS; do
-            if grep -R "${t}" -n . --exclude-dir=.git --exclude="*.bin" | grep -v "Api/EasyUi"; then
-              echo "Found banned token: ${t}"; EXIT=1; fi; done
+          if [ ! -f .github/banned_tokens.txt ]; then echo "No banned token list found"; exit 0; fi
+          while IFS= read -r token; do
+            # Skip comments / empty lines
+            if [ -z "$token" ] || echo "$token" | grep -Eq '^[[:space:]]*#'; then continue; fi
+            if grep -R -n -F "$token" . --exclude-dir=.git --exclude-dir=.github --exclude="*.bin" | grep -v "Api/EasyUi"; then
+              echo "Found banned token: $token"; EXIT=1; fi
+          done < .github/banned_tokens.txt
           if [ $EXIT -ne 0 ]; then echo "Remove legacy branding tokens before merge."; exit 1; fi
 
       - name: .NET Restore
