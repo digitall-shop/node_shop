@@ -1,21 +1,126 @@
-﻿# .NET
-**/bin/
-**/obj/
-*.user
-*.suo
-*.cache
-*.log
-
-# IDE
-.vs/
-.vscode/
-.idea/
-
-# OS
-.DS_Store
+﻿# ---- OS / Misc ----
 Thumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
 
-# Secrets / local overrides
+# ---- IDE / Tooling ----
+.vs/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+*.ncrunch*/*
+_ReSharper.*/
+*.psess
+*.vsp*
+*.pidb
+*.svclog
+*.opendb
+*.cache
+
+# ---- Build outputs (.NET) ----
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]64/
+[Aa][Rr][Mm]/
+[Tt]est[Rr]esult*/
+*.coverage
+*.coveragexml
+*.gcov
+
+# ---- NuGet ----
+packages/
+*.nupkg
+*.snupkg
+*.nuspec
+# If you intentionally keep a packages.config, allow it:
+!**/packages.config
+
+# ---- Publish / Deployment ----
+[Pp]ublish*/
+*.Publish.xml
+PublishProfiles/
+
+# ---- Secrets / Keys ----
+*.pfx
+*.p12
+*.key
+*.snk
+appsettings.*.Local.json
+appsettings.Local.json
+secrets.json
+
+# ---- EF Core (keep migrations, ignore design-time build artifacts) ----
+*/*.ModelSnapshot.cs.dgml
+
+# ---- Node / Frontend (Vite, Tailwind) ----
+node_modules/
+# Dist / build outputs
+/dist/
+/build/
+/.cache/
+.cache/
+coverage/
+.eslintcache
+*.tsbuildinfo
+
+# Project specific frontend paths
+Api/EasyUi/node_modules/
+Api/EasyUi/dist/
+Api/EasyUi/.vite/
+Api/EasyUi/.eslintcache
+
+# ---- Logs ----
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---- Docker / Runtime ----
+*.pid
+*.pid.lock
+.docker/
+docker-data/
+
+# ---- Environment files ----
 .env
-*.secret.json
-appsettings.*.local.json
+.env.*
+!.env.example
+
+# ---- System / Metadata ----
+.DS_Store
+*.iml
+
+# ---- Temporary / Swap ----
+*.swp
+*.swo
+~$*
+*.tmp
+*.temp
+
+# ---- Archives ----
+*.zip
+*.tar
+*.tar.gz
+*.rar
+
+# ---- Images (generated) ----
+wwwroot/images/generated/
+
+# ---- Misc ----
+*.bak
+*.orig
+*.rej
+
+# END OF FILE
+
