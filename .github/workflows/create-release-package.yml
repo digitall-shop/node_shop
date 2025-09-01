@@ -1,0 +1,116 @@
+name: Create Release Deployment Package
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+env:
+  PROJECT_PATH: Api
+  BUILD_OUTPUT_DIR_NAME: publish_output
+  REACT_APP_PATH_REL: Api/EasyUi
+
+jobs:
+  build-and-package:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache Node Modules
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.REACT_APP_PATH_REL }}/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles(format('{0}/package-lock.json', env.REACT_APP_PATH_REL)) }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Set VITE_API_BASE_URL for Frontend Build
+        run: |
+          echo "VITE_API_BASE_URL=https://easyui.samanii.com/api" >> $GITHUB_ENV
+
+      - name: Install Node.js dependencies (Frontend)
+        run: npm ci
+        working-directory: ${{ env.REACT_APP_PATH_REL }}
+
+      - name: Build React App (Frontend)
+        run: npm run build
+        working-directory: ${{ env.REACT_APP_PATH_REL }}
+        env:
+          VITE_API_BASE_URL: ${{ env.VITE_API_BASE_URL }}
+
+      - name: Publish .NET Application (Backend)
+        run: dotnet publish ${{ env.PROJECT_PATH }} -c Release -o ${{ github.workspace }}/${{ env.BUILD_OUTPUT_DIR_NAME }} /p:UseAppHost=false
+
+      - name: Copy React App Build to .NET Publish Directory
+        run: |
+          
+          FINAL_UI_DEST_PATH="${{ github.workspace }}/${{ env.BUILD_OUTPUT_DIR_NAME }}/Api/EasyUi/dist"
+          mkdir -p "$FINAL_UI_DEST_PATH" 
+          cp -R ${{ github.workspace }}/${{ env.REACT_APP_PATH_REL }}/dist/* "$FINAL_UI_DEST_PATH/" 
+
+      - name: Create Deployment Package (ZIP)
+        id: zip_package
+        run: |
+          PACKAGE_NAME="nodeshop-v${{ github.ref_name }}.zip" 
+          cd ${{ github.workspace }}/${{ env.BUILD_OUTPUT_DIR_NAME }}
+
+          zip -r "$PACKAGE_NAME" . 
+          mv "$PACKAGE_NAME" ${{ github.workspace }}/$PACKAGE_NAME 
+
+          echo "PACKAGE_FULL_PATH=${{ github.workspace }}/$PACKAGE_NAME" >> $GITHUB_ENV
+          echo "PACKAGE_NAME=$PACKAGE_NAME" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          body: |
+            # NodeShop Release ${{ github.ref_name }}
+            This release contains the deployable package for NodeShop.
+            
+            **What's Included:**
+            - Published .NET API with integrated React UI.
+            - Compatible with Docker deployment.
+            
+            # Add release notes here based on your changes.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset
+        id: upload_release_asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ env.PACKAGE_FULL_PATH }}
+          asset_name: ${{ env.PACKAGE_NAME }}
+          asset_content_type: application/zip

@@ -1,0 +1,16 @@
+﻿{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:5283",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Production",
+        "HOST_ADDRESS": "https://63a0a217d6d5.ngrok-free.app",
+        "TELEGRAM_TOKEN" : "8054508041:AAF7v8VrYKQcXiQL0FEDgW6jLzoi3qFK074"
+      }
+    }
+  }
+}

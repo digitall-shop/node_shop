@@ -1,0 +1,21 @@
+﻿# .NET
+**/bin/
+**/obj/
+*.user
+*.suo
+*.cache
+*.log
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets / local overrides
+.env
+*.secret.json
+appsettings.*.local.json

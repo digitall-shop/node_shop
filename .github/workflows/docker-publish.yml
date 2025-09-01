@@ -1,0 +1,91 @@
+﻿name: Build and Push Docker Image to GHCR
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: nodeshop
+  NODESHOP_API_BASE_URL: https://api.nodeshop.example # TODO: set real prod API base URL via environment/secret
+  BANNED_TOKENS: EasyHub easyhub EASYHUB
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write   
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache Node Modules
+        uses: actions/cache@v4
+        with:
+          path: Api/EasyUi/node_modules # NOTE: folder rename planned in architecture PR; adjust then.
+          key: ${{ runner.os }}-node-${{ hashFiles('Api/EasyUi/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Detect banned legacy tokens
+        run: |
+          EXIT=0
+          for t in $BANNED_TOKENS; do
+            if grep -R "${t}" -n . --exclude-dir=.git --exclude="*.bin" | grep -v "Api/EasyUi"; then
+              echo "Found banned token: ${t}"; EXIT=1; fi; done
+          if [ $EXIT -ne 0 ]; then echo "Remove legacy branding tokens before merge."; exit 1; fi
+
+      - name: .NET Restore
+        run: dotnet restore NodeShop.sln
+
+      - name: .NET Build (temporary: warnings allowed)
+        run: dotnet build NodeShop.sln -c Release # TODO: Reintroduce -warnaserror after baseline cleanup
+
+      - name: Set image name and short SHA
+        run: |
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]' | cut -d'/' -f1)
+          echo "IMAGE_REPO=ghcr.io/${REPO_LOWER}/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
+          echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_REPO }}:latest
+            ${{ env.IMAGE_REPO }}:${{ env.SHORT_SHA }}
+          build-args: |
+            VITE_API_BASE_URL_BUILD_ARG=${{ env.NODESHOP_API_BASE_URL }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}

@@ -1,0 +1,10 @@
+.node-background-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: radial-gradient(ellipse at center, #0c0c1d 0%, #01010a 100%);
+    pointer-events: none;
+}

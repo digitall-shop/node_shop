@@ -1,0 +1,67 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: nodeshop-db
+    env_file:
+      - .env 
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "${DB_PASSWORD}" 
+      MSSQL_PID: "Express"
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 3 bash -c '</dev/tcp/localhost/1433' || exit 1"]
+      interval: 15s
+      retries: 30
+      start_period: 30s
+    volumes:
+      - sql_data_prod:/var/opt/mssql 
+    ports:
+      - "1533:1433" 
+    restart: always
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL_BUILD_ARG: "https://easyui.samanii.com/api"
+    image: ghcr.io/alirezarmi/nodeshop:latest 
+    container_name: nodeshop-api
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: 
+      - .env
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=db,1433;Database=NodeShopDb;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True"
+      Telegram__BotToken: "${TELEGRAM_BOT_TOKEN}"
+      TelegramBot__LogBotToken: "${TELEGRAM_LOG_BOT_TOKEN}"
+      SerilogCustomSinks__AdminChatId: "${ADMIN_CHAT_ID}"
+      HOST_ADDRESS: "https://easyui.samanii.com" 
+      ASPNETCORE_ENVIRONMENT: "Production" 
+      JwtSettings__Secret: "${JWT_SECRET}"
+      JwtSettings__Issuer: "${HOST_ADDRESS}" 
+      JwtSettings__Audience: "${HOST_ADDRESS}"
+      JwtSettings__ExpiryMinutes: "432000"
+      EncryptionSettings__SecretKey: "${ENCRYPTION_SECRET_KEY}"
+      ApiSecret__Key: "${API_SECRET}"
+    ports:
+      - '127.0.0.1:8080:8080'
+      - '5002:8080'
+    restart: always
+    
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    command: -H unix:///var/run/docker.sock
+    restart: always
+    ports:
+      - "9443:9443"
+      - "8000:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+
+volumes:
+  sql_data_prod:
+  portainer_data:

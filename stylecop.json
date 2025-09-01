@@ -1,0 +1,14 @@
+﻿{
+  "settings": {
+    "documentationRules": {
+      "companyName": "NodeShop",
+      "documentExposedElements": true,
+      "documentInternalElements": false,
+      "documentPrivateElements": false
+    },
+    "orderingRules": {
+      "usingDirectivesPlacement": "outsideNamespace"
+    }
+  }
+}
+

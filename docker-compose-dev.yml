@@ -1,0 +1,48 @@
+﻿services:
+  db-dev:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: nodeshop-db-dev
+    env_file:
+      - .env
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "${DB_PASSWORD}"
+      MSSQL_PID: "Express"
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 3 bash -c '</dev/tcp/localhost/1433' || exit 1"]
+      interval: 15s
+      retries: 30
+      start_period: 30s
+    volumes:
+      - sql_data_dev:/var/opt/mssql
+    ports:
+      - "1500:1433"
+    restart: always
+  
+  api-dev:
+    container_name: nodeshop-api-dev
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL_BUILD_ARG: "https://63a0a217d6d5.ngrok-free.app/api"
+    depends_on:
+      db-dev:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ConnectionStrings__DefaultConnection: "Server=db-dev,1433;Database=NodeShopDev;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True"
+      Telegram__BotToken: "${TELEGRAM_BOT_TOKEN}"
+      HOST_ADDRESS: "https://63a0a217d6d5.ngrok-free.app"
+      JwtSettings__Secret: "${JWT_SECRET}"
+      JwtSettings__Issuer: "${HOST_ADDRESS_DEV}"
+      JwtSettings__Audience: "${HOST_ADDRESS_DEV}"
+      JwtSettings__ExpiryMinutes: "432000"
+    ports:
+      - "5000:5000"
+    restart: always
+
+volumes:
+  sql_data_dev:

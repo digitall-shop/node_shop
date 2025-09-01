@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <SpaRoot>EasyUi</SpaRoot>
+        
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Hangfire.AspNetCore" />
+        <PackageReference Include="Hangfire.SqlServer" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+        <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Newtonsoft.Json" />
+        <PackageReference Include="NSwag.AspNetCore" />
+        <PackageReference Include="Scalar.AspNetCore" />
+        <PackageReference Include="Scaler" />
+        <PackageReference Include="Serilog.AspNetCore" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="$(SpaRoot)/dist/**" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    </ItemGroup>
+
+    <Target Name="PublishSpa" BeforeTargets="Publish" Condition="'$(BuildingProject)' == 'true'">
+        <Exec Command="npm install" WorkingDirectory="$(SpaRoot)" />
+        <Exec Command="npm run build" WorkingDirectory="$(SpaRoot)" />
+    </Target>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Application\Application.csproj" />
+        <ProjectReference Include="..\Telegram\Telegram.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="EasyUi\images\transaction_receipts\origin\" />
+      <Folder Include="EasyUi\images\transaction_receipts\thumb\" />
+      <Folder Include="wwwroot\" />
+    </ItemGroup>
+
+</Project>

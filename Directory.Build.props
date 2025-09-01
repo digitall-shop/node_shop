@@ -1,0 +1,13 @@
+﻿<Project>
+  <PropertyGroup>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- Treat warnings as errors only in CI; workflow already passes -warnaserror. -->
+    <TreatWarningsAsErrors Condition="'$(CI)'=='true'">true</TreatWarningsAsErrors>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="StyleCop.Analyzers" PrivateAssets="all" />
+  </ItemGroup>
+</Project>
+
