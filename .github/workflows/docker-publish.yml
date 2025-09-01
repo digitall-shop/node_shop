@@ -60,7 +60,7 @@ jobs:
       - name: .NET Restore
         run: dotnet restore NodeShop.sln
 
-      - name: .NET Build (temporary: warnings allowed)
+      - name: ".NET Build (temporary: warnings allowed)"
         run: dotnet build NodeShop.sln -c Release # TODO: Reintroduce -warnaserror after baseline cleanup
 
       - name: Set image name and short SHA
